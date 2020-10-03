@@ -56,4 +56,5 @@ python -m mher.run --alg=her --env=FetchPush-v1 --num_epoch 100 --num_env 12 --n
 * 8.2 update lambda multi-step HER
 * 8.23 update model-based multi-step HER
 * 9.27 update readme
+* 10.3 V0.5: revised code framework hugely, supported DDPG and HER(future, last, final, random);
 
