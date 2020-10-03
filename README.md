@@ -45,7 +45,7 @@ The master branch supports Tensorflow from version 1.4 to 1.14. For Tensorflow 2
 
 Training and saving models,saving logs.
 ```bash
-python -m mher.run --alg=her --env=FetchPush-v1 --num_epoch 100 --num_env 12 --network=mlp --log_path=~/logs/FetchSlide_push_cpu12_n_step_3/ --save_path=~/policies/her/fetchreach5k
+python -m mher.run --env=FetchReach-v1 --num_epoch 30 --num_env 1 --sampler her_future --play_episodes 5 --log_path=~/logs/FetchSlide_push_cpu12_n_step_3/ --save_path=~/policies/her/fetchreach5k
 ```
 
 
