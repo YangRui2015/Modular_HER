@@ -1,23 +1,24 @@
-import sys
-import re
+import copy
 import multiprocessing
 import os
 import os.path as osp
-import gym
-import tensorflow as tf
-import numpy as np
-import copy
+import re
+import sys
 
-from mher.common.import_util import get_alg_module
-from mher.common.cmd_util import preprocess_kwargs
-from mher.common.init_utils import init_environment_import, init_mpi_import
-from mher.common import logger, set_global_seeds, tf_util
-from mher.common.logger import configure_logger
-from mher.play import play 
-from mher.envs.make_env_utils import build_env
-from mher.train import train
+import gym
+import numpy as np
+import tensorflow as tf
+
 from mher import config
-from mher.algos.rollout import RolloutWorker
+from mher.rollouts.rollout import RolloutWorker
+from mher.common import logger, set_global_seeds, tf_util
+from mher.common.cmd_util import preprocess_kwargs
+from mher.common.import_util import get_alg_module
+from mher.common.init_utils import init_environment_import, init_mpi_import
+from mher.common.logger import configure_logger
+from mher.envs.make_env_utils import build_env
+from mher.play import play
+from mher.train import train
 
 MPI = init_mpi_import()
 _game_envs = init_environment_import()

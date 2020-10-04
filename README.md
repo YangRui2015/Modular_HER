@@ -31,13 +31,12 @@ brew install cmake openmpi
 ## Installation
 ```bash
 git clone https://github.com/YangRui2015/Modular_HER.git
-cd mher
+cd Modular_HER
 pip install -e .
 ```
 
 
 ## Usage
-
 Training and saving models,saving logs.
 ```bash
 python -m mher.run --env=FetchReach-v1 --num_epoch 30 --num_env 1 --sampler her_future --play_episodes 5 --log_path=~/logs/FetchSlide_push_cpu12_n_step_3/ --save_path=~/policies/her/fetchreach5k

@@ -1,14 +1,16 @@
-import os
-import click
-import numpy as np
 import json
-from mpi4py import MPI
+import os
 import time
 
+import click
+import numpy as np
+from mpi4py import MPI
+
+import mher.config as config
 from mher.common import logger
 from mher.common.mpi_moments import mpi_moments
-import mher.config as config
-from mher.algos.rollout import RolloutWorker
+from mher.rollouts.rollout import RolloutWorker
+
 
 def mpi_average(value):
     if not isinstance(value, list):

@@ -4,7 +4,7 @@ import gym
 import numpy as np
 from mher.algos.ddpg import DDPG
 from mher.algos.util import dims_to_shapes
-from mher.buffers import samplers
+from mher.samplers import *
 from mher.buffers.replay_buffer import ReplayBuffer
 from mher.common import logger
 from mher.common.monitor import Monitor
@@ -138,10 +138,10 @@ def configure_buffer(dims, params, sampler):
 
 def configure_sampler(dims, params):
     if params['sampler'] == 'random':
-         sampler = samplers.RandomSampler(params['T'], params['reward_fun'], params['batch_size'])
+         sampler = RandomSampler(params['T'], params['reward_fun'], params['batch_size'])
     elif params['sampler'].startswith('her'): #valid: her_future, her_random, her_final
         strategy = params['sampler'].replace('her_', '')
-        sampler = samplers.HER_Sampler(params['T'], params['reward_fun'], params['batch_size'], strategy=strategy, replay_k=params['replay_k'])
+        sampler = HER_Sampler(params['T'], params['reward_fun'], params['batch_size'], strategy=strategy, replay_k=params['replay_k'])
     else:
         raise NotImplementedError
     return sampler
