@@ -2,15 +2,17 @@ import os
 
 import gym
 import numpy as np
+
 from mher.algos.ddpg import DDPG
 from mher.algos.util import dims_to_shapes
-from mher.samplers import *
 from mher.buffers.replay_buffer import ReplayBuffer
 from mher.common import logger
 from mher.common.monitor import Monitor
 from mher.default_cfg import DEFAULT_ENV_PARAMS, DEFAULT_PARAMS
-from mher.envs.env_utils import cached_make_env, simple_goal_subtract, get_rewardfun
+from mher.envs.env_utils import (cached_make_env, get_rewardfun,
+                                 simple_goal_subtract)
 from mher.envs.wrappers.wrapper_utils import recurse_attribute
+from mher.samplers import *
 
 
 def log_params(params):

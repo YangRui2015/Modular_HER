@@ -3,16 +3,15 @@ from collections import OrderedDict
 
 import numpy as np
 import tensorflow as tf
+from mher.algos.actor_critic import ActorCritic
+from mher.algos.normalizer import Normalizer
+from mher.algos.util import (convert_episode_to_batch_major, dims_to_shapes,
+                             flatten_grads, get_var, import_function,
+                             store_args, transitions_in_episode_batch)
+from mher.common import logger, tf_util
+from mher.common.mpi_adam import MpiAdam
 from tensorflow.contrib.staging import StagingArea
 
-from mher.common import logger
-from mher.common.mpi_adam import MpiAdam
-from mher.common import tf_util
-from mher.algos.util import (
-    import_function, store_args, flatten_grads, transitions_in_episode_batch, 
-    convert_episode_to_batch_major, dims_to_shapes, get_var)
-from mher.algos.normalizer import Normalizer
-from mher.algos.actor_critic import ActorCritic
 
 class DDPG(object):
     @store_args

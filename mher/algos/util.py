@@ -1,14 +1,14 @@
+import functools
+import importlib
+import inspect
 import os
 import subprocess
 import sys
-import importlib
-import inspect
-import functools
 
-import tensorflow as tf
 import numpy as np
-
+import tensorflow as tf
 from mher.common import tf_util as U
+
 
 def dims_to_shapes(input_dims):
     return {key: tuple([val]) if val > 0 else tuple() for key, val in input_dims.items()}
@@ -84,6 +84,7 @@ def nn(input, layers_sizes, reuse=None, flatten=False, name="", trainable='True'
 
 def install_mpi_excepthook():
     import sys
+
     from mpi4py import MPI
     old_hook = sys.excepthook
 

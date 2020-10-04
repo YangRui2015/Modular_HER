@@ -1,5 +1,6 @@
 import tensorflow as tf
-from mher.algos.util import store_args, nn
+from mher.algos.util import nn, store_args
+
 
 class ActorCritic: 
     @store_args

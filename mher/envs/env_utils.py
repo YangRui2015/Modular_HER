@@ -1,8 +1,10 @@
 '''
 Util tools for environments
 '''
-import gym
 import re
+
+import gym
+
 
 def simple_goal_subtract(a, b):
     assert a.shape == b.shape
@@ -63,9 +65,9 @@ def get_env_type(args, _game_envs):
 def obs_to_goal_fun(env):
     # only support Fetchenv and Handenv now
     from gym.envs.robotics import FetchEnv, hand_env
+    from multiworld.envs.mujoco.sawyer_xyz import (sawyer_push_nips,
+                                                   sawyer_reach)
     from multiworld.envs.pygame import point2d
-    from multiworld.envs.mujoco.sawyer_xyz import sawyer_push_nips  
-    from multiworld.envs.mujoco.sawyer_xyz import sawyer_reach
 
     if isinstance(env.env, FetchEnv):
         obs_dim = env.observation_space['observation'].shape[0]

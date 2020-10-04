@@ -1,5 +1,6 @@
-import numpy as np
 import gym
+import numpy as np
+
 
 class Sampler:
     def __init__(self, T, reward_fun, batch_size):

@@ -1,8 +1,10 @@
-import multiworld
+import copy
+
 import gym
+import multiworld
 import numpy as np
 from gym.core import Wrapper
-import copy
+
 
 # for point env 
 class PointGoalWrapper(Wrapper):
