@@ -14,7 +14,7 @@ Modular-HER is revised from OpenAI baselines and supports many improvement for H
 
 
 ## Prerequisites 
-Require python3 (>=3.5) and system packages CMake, OpenMPI and zlib. Those can be installed as follows
+Require python3 (>=3.5), tensorflow (>=1.4,<=1.14) and system packages CMake, OpenMPI and zlib. Those can be installed as follows
 
 #### Ubuntu :
     
@@ -28,17 +28,12 @@ With [Homebrew](https://brew.sh) installed, run the following:
 brew install cmake openmpi
 ```
 
-Tensorflow versions: from version 1.4 to 1.14. 
-
 ## Installation
-- Clone the repo and cd into it:
-    ```bash
-    git clone http
-    cd mher
-- Install baselines package
-    ```bash
-    pip install -e .
-    ```
+```bash
+git clone https://github.com/YangRui2015/Modular_HER.git
+cd mher
+pip install -e .
+```
 
 
 ## Usage
