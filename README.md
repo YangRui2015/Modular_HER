@@ -1,6 +1,6 @@
 # Modular-HER 
 
-Modular-HER is revised from OpenAI baselines and supports many improvement for HER as modules.
+Modular-HER is revised from OpenAI baselines and supports many improvements for Hindsight Experience Replay (HER) as modules. We aim to provide a more modular, readable and consice package for Multi-goal Reinforcement Learning.
 
 ## Functions
 - [x] DDPG (https://arxiv.org/abs/1509.02971);
@@ -39,7 +39,7 @@ pip install -e .
 ## Usage
 Training and saving models,saving logs.
 ```bash
-python -m mher.run --env=FetchReach-v1 --num_epoch 30 --num_env 1 --sampler her_future --play_episodes 5 --log_path=~/logs/FetchSlide_push_cpu12_n_step_3/ --save_path=~/policies/her/fetchreach5k
+python -m mher.run --env=FetchReach-v1 --num_epoch 30 --num_env 1 --sampler her_future --play_episodes 5 --log_path=~/logs/fetchreach/ --save_path=~/logs/models/fetchreach_herfuture/
 ```
 
 
