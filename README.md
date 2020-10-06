@@ -9,7 +9,7 @@ Modular-HER is revised from OpenAI baselines and supports many improvements for 
 - [ ] Prioritized HER;
 - [ ] Energe-based Prioritized HER(https://www.researchgate.net/publication/341776498_Energy-Based_Hindsight_Experience_Prioritization);
 - [ ] Curriculum-guided Hindsight Experience Replay (http://papers.nips.cc/paper/9425-curriculum-guided-hindsight-experience-replay);
-- [x] Our methods: Multi-step HER ($\lambda$) and Model-based Multi-step HER;
+- [x] Our methods: Multi-step HER (![](https://latex.codecogs.com/svg.latex?\lambda)) and Model-based Multi-step HER;
 - [ ] more to be continued...
 
 
