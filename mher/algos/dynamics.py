@@ -1,7 +1,7 @@
 import mher.common.tf_util as U
 import numpy as np
 import tensorflow as tf
-from mher.algos.normalizer import Normalizer, NormalizerNumpy
+from mher.common.normalizer import Normalizer, NormalizerNumpy
 from mher.algos.util import store_args
 from mher.common import logger
 from mher.common.mpi_adam import MpiAdam

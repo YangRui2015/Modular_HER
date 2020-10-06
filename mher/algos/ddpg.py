@@ -4,12 +4,12 @@ from collections import OrderedDict
 import numpy as np
 import tensorflow as tf
 from mher.algos.actor_critic import ActorCritic
-from mher.algos.normalizer import Normalizer
 from mher.algos.util import (convert_episode_to_batch_major, dims_to_shapes,
                              flatten_grads, get_var, import_function,
                              store_args, transitions_in_episode_batch)
 from mher.common import logger, tf_util
 from mher.common.mpi_adam import MpiAdam
+from mher.common.normalizer import Normalizer
 from tensorflow.contrib.staging import StagingArea
 
 
@@ -217,9 +217,7 @@ class DDPG(object):
         if update_stats:   # episode doesn't has key o_2
             episode_batch['o_2'] = episode_batch['o'][:, 1:, :]
             episode_batch['ag_2'] = episode_batch['ag'][:, 1:, :]
-            num_transitions = transitions_in_episode_batch(episode_batch)
             # add transitions to normalizer
-            transitions = episode_batch.copy()
             os, gs, ags, us = episode_batch['o'].copy(), episode_batch['g'].copy(), episode_batch['ag'].copy(), episode_batch['u'].copy()
             os, gs = self._preprocess_og(o=os, g=gs, ag=ags)
             # update normalizer online 
