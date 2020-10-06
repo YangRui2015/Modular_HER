@@ -52,3 +52,4 @@ python -m mher.run --env=FetchReach-v1 --num_epoch 30 --num_env 1 --sampler her_
 * 9.27 update readme
 * 10.3 V0.5: revised code framework hugely, supported DDPG and HER(future, last, final, random);
 * 10.4 V0.6: update code framework, add rollouts and samplers packages;
+* 10.6 add nstep sampler and nstep her sampler;
