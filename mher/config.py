@@ -88,6 +88,12 @@ def prepare_params(tmp_env, params):
 
 def configure_ddpg(dims, params, buffer):
     ddpg_params = params['ddpg_params']
+    if 'nstep' in params['sampler']:
+        vloss_type = 'tf_gamma'
+    # elif 'nstep' in params['sampler'] and 'her' in params['sampler']:
+    #     vloss_type = 'target'
+    else:
+        vloss_type = 'normal'
     ddpg_params.update({'input_dims': dims.copy(),  
                         'buffer':buffer,
                         'clip_pos_returns': ddpg_params['clip_pos_returns'], 
@@ -95,6 +101,7 @@ def configure_ddpg(dims, params, buffer):
                                         if ddpg_params['clip_return'] else np.inf, 
                         'subtract_goals': simple_goal_subtract,
                         'gamma': params['gamma'],
+                        'vloss_type': vloss_type
                         })
     policy = DDPG(**ddpg_params) 
     return policy
@@ -143,7 +150,12 @@ def configure_sampler(dims, params):
          sampler = RandomSampler(params['T'], params['reward_fun'], params['batch_size'])
     elif params['sampler'].startswith('her'): #valid: her_future, her_random, her_final
         strategy = params['sampler'].replace('her_', '')
-        sampler = HER_Sampler(params['T'], params['reward_fun'], params['batch_size'], strategy=strategy, replay_k=params['replay_k'])
+        sampler = HER_Sampler(params['T'], params['reward_fun'], params['batch_size'], params['relabel_p'], strategy)
+    elif params['sampler'] == 'nstep':
+        sampler = Nstep_Sampler(params['T'], params['reward_fun'], params['batch_size'], params['relabel_p'], params['n_step'], params['gamma'])
+    elif params['sampler'].startswith('nstep_her'):
+        strategy = params['sampler'].replace('nstep_her_', '')
+        sampler = Nstep_HER_Sampler(params['T'], params['reward_fun'], params['batch_size'], params['relabel_p'], params['n_step'], params['gamma'], strategy)
     else:
         raise NotImplementedError
     return sampler

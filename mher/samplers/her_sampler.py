@@ -4,7 +4,7 @@ from mher.samplers.sampler import RelabelSampler
 
 class HER_Sampler(RelabelSampler):
     valid_strategy = ['future', 'last', 'random', 'episode']
-    def __init__(self, T, reward_fun, batch_size, relabel_p, strategy):
+    def __init__(self, T, reward_fun, batch_size, relabel_p, strategy, *args):
         super(HER_Sampler, self).__init__(T, reward_fun, batch_size, relabel_p)
         self.strategy = strategy
     

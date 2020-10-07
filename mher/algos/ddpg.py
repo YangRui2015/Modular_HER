@@ -15,10 +15,9 @@ from tensorflow.contrib.staging import StagingArea
 
 class DDPG(object):
     @store_args
-    def __init__(self, buffer, input_dims, hidden, layers, polyak,
-                 Q_lr, pi_lr, norm_eps, norm_clip, max_u, action_l2, clip_obs, scope,
-                 subtract_goals, relative_goals, clip_pos_returns, 
-                 clip_return, gamma, reuse=False, **kwargs):
+    def __init__(self, buffer, input_dims, hidden, layers, polyak, Q_lr, pi_lr, 
+                norm_eps, norm_clip, max_u, action_l2, clip_obs, scope, subtract_goals, 
+                relative_goals, clip_pos_returns, clip_return, gamma, vloss_type='normal', reuse=False, **kwargs):
         """
         buffer (object): buffer to save transitions
         input_dims (dict of ints): dimensions for the observation (o), the goal (g), 
@@ -39,6 +38,7 @@ class DDPG(object):
         clip_pos_returns (boolean): whether or not positive returns should be clipped
         clip_return (float): clip returns to be in [-clip_return, clip_return]
         gamma (float): gamma used for Q learning updates
+        vloss_type (str): value loss type, 'normal', 'tf_gamma', 'target'
         reuse (boolean): whether or not the networks should be reused
         """
         if self.clip_return is None:
@@ -65,12 +65,13 @@ class DDPG(object):
         for key in ['o', 'g']:
             stage_shapes[key + '_2'] = stage_shapes[key]
         stage_shapes['r'] = (None,)
+        if self.vloss_type == 'tf_gamma':
+            stage_shapes['gamma'] = (None,)
         return stage_shapes
     
     def _create_network(self, reuse=False):
         logger.info("Creating a DDPG agent with action space %d x %s..." % (self.dimu, self.max_u))
         self.sess = tf_util.get_session()
-
         # normalizer for input
         with tf.variable_scope('o_stats') as vs:
             if reuse:
@@ -109,10 +110,13 @@ class DDPG(object):
         # loss functions
         target_Q_pi_tf = self.target.Q_pi_tf
         clip_range = (-self.clip_return, 0. if self.clip_pos_returns else np.inf)
-        # if self.use_lambda_nstep or self.use_dynamic_nstep:
-        #     target_tf = tf.clip_by_value(batch_tf['r'] , *clip_range)  # lambda target 
-        # else:
-        target_tf = tf.clip_by_value(batch_tf['r'] + self.gamma * target_Q_pi_tf, * clip_range)
+        logger.log('value loss type: {}'.format(self.vloss_type))
+        if self.vloss_type == 'tf_gamma':
+            target_tf = tf.clip_by_value(batch_tf['r'] + batch_tf['gamma'] * target_Q_pi_tf, * clip_range)
+        elif self.vloss_type == 'target':
+            target_tf = tf.clip_by_value(batch_tf['r'], * clip_range)
+        else:
+            target_tf = tf.clip_by_value(batch_tf['r'] + self.gamma * target_Q_pi_tf, * clip_range)
             
         self.Q_loss_tf = tf.reduce_mean(tf.square(tf.stop_gradient(target_tf) - self.main.Q_tf))
         self.pi_loss_tf = -tf.reduce_mean(self.main.Q_pi_tf)
@@ -136,12 +140,8 @@ class DDPG(object):
         # optimizers
         self.Q_adam = MpiAdam(self.main_Q_var, scale_grad_by_procs=False)
         self.pi_adam = MpiAdam(self.main_pi_var, scale_grad_by_procs=False)
-
-        # polyak averaging
         self.main_vars = self.main_Q_var + self.main_pi_var
         self.target_vars = self.target_Q_var+ self.target_pi_var
-        # self.stats_vars = self._global_vars('o_stats') + self._global_vars('g_stats')
-
         self.init_target_net_op = list(map(lambda v: v[0].assign(v[1]), zip(self.target_vars, self.main_vars)))
         self.update_target_net_op = list(map(lambda v: v[0].assign(self.polyak * v[0] + (1. - self.polyak) * v[1]), 
                                         zip(self.target_vars, self.main_vars)))
@@ -187,8 +187,7 @@ class DDPG(object):
         feed = {
             policy.o_tf: o.reshape(-1, self.dimo),
             policy.g_tf: g.reshape(-1, self.dimg),
-        } # policy.u_tf: np.zeros((o.size // self.dimo, self.dimu), dtype=np.float32)
-        
+        } 
         ret = self.sess.run(vals, feed_dict=feed)
         u = ret[0]
         noise = noise_eps * self.max_u * np.random.randn(*u.shape)  # gaussian noise
@@ -197,7 +196,6 @@ class DDPG(object):
         if u.shape[0] == 1:
             u = u[0] 
         ret[0] = u.copy()
-
         if len(ret) == 1:
             return ret[0]
         else:
@@ -215,15 +213,11 @@ class DDPG(object):
         """episode_batch: array of batch_size x (T or T+1) x dim_key, 'o' is of size T+1, others are of size T"""
         self.buffer.store_episode(episode_batch)
         if update_stats:   # episode doesn't has key o_2
-            episode_batch['o_2'] = episode_batch['o'][:, 1:, :]
-            episode_batch['ag_2'] = episode_batch['ag'][:, 1:, :]
-            # add transitions to normalizer
-            os, gs, ags, us = episode_batch['o'].copy(), episode_batch['g'].copy(), episode_batch['ag'].copy(), episode_batch['u'].copy()
+            os, gs, ags = episode_batch['o'].copy(), episode_batch['g'].copy(), episode_batch['ag'].copy()
             os, gs = self._preprocess_og(o=os, g=gs, ag=ags)
             # update normalizer online 
             self.o_stats.update_all(os)
             self.g_stats.update_all(gs)
-            self.u_stats.update_all(us)
 
     def _sync_optimizers(self):
         self.Q_adam.sync()
@@ -242,18 +236,14 @@ class DDPG(object):
         self.Q_adam.update(Q_grad, self.Q_lr)
         self.pi_adam.update(pi_grad, self.pi_lr)
 
-    def sample_batch(self, method='list'):
+    def sample_batch(self):
         transitions = self.buffer.sample()
         o, o_2, g = transitions['o'], transitions['o_2'], transitions['g']
         ag, ag_2 = transitions['ag'], transitions['ag_2']
         transitions['o'], transitions['g'] = self._preprocess_og(o=o, g=g, ag=ag)
         transitions['o_2'], transitions['g_2'] = self._preprocess_og(o=o_2, g=g, ag=ag_2)
-
-        if method == 'list':
-            return [transitions[key] for key in self.stage_shapes.keys()]
-        else:
-            return  transitions
-
+        return [transitions[key] for key in self.stage_shapes.keys()]
+        
     def stage_batch(self, batch=None):
         if batch is None:
             batch = self.sample_batch()

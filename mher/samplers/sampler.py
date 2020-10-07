@@ -60,7 +60,7 @@ class RelabelSampler(Sampler):
         return (np.random.uniform(size=self.batch_size) < self.relabel_p)
 
     def relabel_transition(self, transitions, relabel_indexes, relabel_ag):
-        assert len(relabel_indexes) == len(relabel_ag)
-        transitions[relabel_indexes] = relabel_ag
+        assert relabel_indexes.sum() == len(relabel_ag)
+        transitions['g'][relabel_indexes] = relabel_ag
         transitions['r'] = self.recompute_reward(transitions)
         return transitions
