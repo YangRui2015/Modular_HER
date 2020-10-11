@@ -19,34 +19,6 @@ def log_params(params):
     for key in sorted(params.keys()):
         logger.info('{}: {}'.format(key, params[key]))
 
-def prepare_mode(params):
-    if 'alg' in params.keys() and params['alg'].startswith('her'):
-        alg_name = params['alg']
-        alg, mode = alg_name.split('_')
-        if mode == 'dynamic':
-            params['use_dynamic_nstep'] = True
-            params['use_lambda_nstep'] = False
-            params['use_nstep'] = False
-            params['random_init'] = 500
-        elif mode == 'lambda':
-            params['use_lambda_nstep'] = True
-            params['use_nstep'] = False
-            params['use_dynamic_nstep'] = False
-        elif mode == 'multistep':
-            params['use_nstep'] = True
-            params['use_dynamic_nstep'] = False
-            params['use_lambda_nstep'] = False
-        else:
-            params['use_nstep'] = False
-            params['use_dynamic_nstep'] = False
-            params['use_lambda_nstep'] = False
-            params['n_step'] = 1
-    else:
-        params['use_nstep'] = False
-        params['use_dynamic_nstep'] = False
-        params['use_lambda_nstep'] = False
-        params['n_step'] = 1
-    return params
 
 def process_params(env, tmp_env, rank, args, extra_args):
     params = DEFAULT_PARAMS
@@ -68,7 +40,6 @@ def process_params(env, tmp_env, rank, args, extra_args):
 # get policy params
 def prepare_params(tmp_env, params):
     # default max episode steps
-    params = prepare_mode(params)
     params['reward_fun'] = get_rewardfun(params, tmp_env)
     # DDPG params
     ddpg_params = dict()
@@ -152,10 +123,10 @@ def configure_sampler(dims, params):
         strategy = params['sampler'].replace('her_', '')
         sampler = HER_Sampler(params['T'], params['reward_fun'], params['batch_size'], params['relabel_p'], strategy)
     elif params['sampler'] == 'nstep':
-        sampler = Nstep_Sampler(params['T'], params['reward_fun'], params['batch_size'], params['relabel_p'], params['n_step'], params['gamma'])
+        sampler = Nstep_Sampler(params['T'], params['reward_fun'], params['batch_size'], params['relabel_p'], params['nstep'], params['gamma'])
     elif params['sampler'].startswith('nstep_her'):
         strategy = params['sampler'].replace('nstep_her_', '')
-        sampler = Nstep_HER_Sampler(params['T'], params['reward_fun'], params['batch_size'], params['relabel_p'], params['n_step'], params['gamma'], strategy)
+        sampler = Nstep_HER_Sampler(params['T'], params['reward_fun'], params['batch_size'], params['relabel_p'], params['nstep'], params['gamma'], strategy)
     else:
         raise NotImplementedError
     return sampler

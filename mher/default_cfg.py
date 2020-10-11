@@ -71,7 +71,7 @@ DEFAULT_PARAMS = {
     'random_init':100, # for dynamic n-step, this should be bigger
 
     # n step hindsight experience
-    'n_step':3,
+    'nstep':3,
     'use_nstep':False,
 
     # lambda n-step
