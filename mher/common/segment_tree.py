@@ -1,5 +1,5 @@
 import operator
-
+import numpy as np 
 
 class SegmentTree(object):
     def __init__(self, capacity, operation, neutral_element):
@@ -30,7 +30,8 @@ class SegmentTree(object):
         """
         assert capacity > 0 and capacity & (capacity - 1) == 0, "capacity must be positive and a power of 2."
         self._capacity = capacity
-        self._value = [neutral_element for _ in range(2 * capacity)]
+        # self._value = [neutral_element for _ in range(2 * capacity)]
+        self._value = np.zeros(2 * capacity) + neutral_element
         self._operation = operation
 
     def _reduce_helper(self, start, end, node, node_start, node_end):
@@ -51,16 +52,13 @@ class SegmentTree(object):
     def reduce(self, start=0, end=None):
         """Returns result of applying `self.operation`
         to a contiguous subsequence of the array.
-
             self.operation(arr[start], operation(arr[start+1], operation(... arr[end])))
-
         Parameters
         ----------
         start: int
             beginning of the subsequence
         end: int
             end of the subsequences
-
         Returns
         -------
         reduced: obj
@@ -72,6 +70,24 @@ class SegmentTree(object):
             end += self._capacity
         end -= 1
         return self._reduce_helper(start, end, 1, 0, self._capacity - 1)
+
+    def set_items(self, idxs, vals):
+        '''input np.arrys, faster than original code'''
+        idxs += self._capacity
+        self._value[idxs] = vals
+        idxs //= 2
+        for idx in idxs:
+            while idx >= 1:
+                self._value[idx] = self._operation(
+                    self._value[2 * idx],
+                    self._value[2 * idx + 1]
+                )
+                idx //= 2
+
+    def get_items(self, idxs):
+        assert np.all((idxs >= 0) & (idxs < self._capacity))
+        idxs += self._capacity
+        return self._value[idxs]
 
     def __setitem__(self, idx, val):
         # index of the leaf
@@ -86,7 +102,7 @@ class SegmentTree(object):
             idx //= 2
 
     def __getitem__(self, idx):
-        assert 0 <= idx < self._capacity
+        assert  0 <= idx < self._capacity
         return self._value[self._capacity + idx]
 
 
@@ -101,6 +117,20 @@ class SumSegmentTree(SegmentTree):
     def sum(self, start=0, end=None):
         """Returns arr[start] + ... + arr[end]"""
         return super(SumSegmentTree, self).reduce(start, end)
+
+    def sum_numpy(self, start, end=None):
+        return np.sum(self._value[self._capacity:])
+
+    def set_items(self, idxs, vals):
+        '''input np.arrys, faster especially for sumtree'''
+        idxs += self._capacity
+        deltas = vals - self._value[idxs]
+        self._value[idxs] = vals
+        idxs //= 2
+        for idx, delta in zip(idxs, deltas):
+            while idx >= 1:
+                self._value[idx] += delta
+                idx //= 2
 
     def find_prefixsum_idx(self, prefixsum):
         """Find the highest index `i` in the array such that
@@ -143,3 +173,4 @@ class MinSegmentTree(SegmentTree):
         """Returns min(arr[start], ...,  arr[end])"""
 
         return super(MinSegmentTree, self).reduce(start, end)
+

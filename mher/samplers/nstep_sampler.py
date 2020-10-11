@@ -75,15 +75,6 @@ class Nstep_HER_Sampler(Nstep_Sampler, HER_Sampler):
 
 
 
-        
-
-
-
-            
-
-
-
-
 
     
 #     def _sample_nstep_lambda_her_transitions(episode_batch, batch_size_in_transitions, steps, gamma, Q_fun, lamb=0.7):

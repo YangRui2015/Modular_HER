@@ -48,8 +48,7 @@ class ReplayBuffer:
         return transitions
 
     def store_episode(self, episode_batch):
-        """episode_batch: array(rollout_batch_size x (T or T+1) x dim_key)
-        """
+        """episode_batch: array(rollout_batch_size x (T or T+1) x dim_key)"""
         buffer_sizes = [len(episode_batch[key]) for key in episode_batch.keys()]
         assert np.all(np.array(buffer_sizes) == buffer_sizes[0])
         buffer_size = buffer_sizes[0]
@@ -60,6 +59,7 @@ class ReplayBuffer:
                 if key in self.buffers:
                     self.buffers[key][idxs] = episode_batch[key]
             self.n_transitions_stored += buffer_size * self.T
+        return idxs
 
     def get_current_episode_size(self):
         with self.lock:
@@ -120,9 +120,3 @@ class ReplayBuffer:
         if inc == 1:
             idx = idx[0]
         return idx
-
-if __name__ == "__main__":
-    buffer_shapes = {'a':(2, 1)}
-    buffer = ReplayBuffer(buffer_shapes, 10, 2, None)
-    buffer.store_episode({'a':np.random.random((1,2,1))})
-    import pdb; pdb.set_trace()
