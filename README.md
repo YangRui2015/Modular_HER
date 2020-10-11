@@ -48,11 +48,11 @@ We use a group of test parameters in DEFAULT_ENV_PARAMS for performance comparis
 
 1. Performance of HER of different goal sample methods (future, random, episode, last).
 
-<center><img src="./data/mher_all.png" style="zoom: 25%; " /></center>
+<div  align="center"> <img src="./data/mher_all.png" width=500;  /></div>    
 
 1. Performance of Nstep HER and Nstep DDPG.
 
-<center><img src="./data/mher_all_step.png" style="zoom:25%;" /></center>
+<div  align="center"><img src="./data/mher_all_step.png" width=500;" /></div>
 
 ## Update
 
