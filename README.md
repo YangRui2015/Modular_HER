@@ -5,8 +5,9 @@ Modular-HER is revised from OpenAI baselines and supports many improvements for 
 ## Functions
 - [x] DDPG (https://arxiv.org/abs/1509.02971);
 - [x] HER (future, episode, final, random) (https://arxiv.org/abs/1707.01495);
+- [x] Cut HER;
 - [ ] SHER (https://arxiv.org/abs/2002.02089);
-- [ ] Prioritized HER;
+- [x] Prioritized HER (same as PHER in https://arxiv.org/abs/1905.08786);
 - [ ] Energe-based Prioritized HER(https://www.researchgate.net/publication/341776498_Energy-Based_Hindsight_Experience_Prioritization);
 - [ ] Curriculum-guided Hindsight Experience Replay (http://papers.nips.cc/paper/9425-curriculum-guided-hindsight-experience-replay);
 - [x] nstep DDPG and nstep HER;

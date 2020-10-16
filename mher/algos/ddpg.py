@@ -17,7 +17,8 @@ class DDPG(object):
     @store_args
     def __init__(self, buffer, input_dims, hidden, layers, polyak, Q_lr, pi_lr, 
                 norm_eps, norm_clip, max_u, action_l2, clip_obs, scope, subtract_goals, 
-                relative_goals, clip_pos_returns, clip_return, gamma, vloss_type='normal', reuse=False, **kwargs):
+                relative_goals, clip_pos_returns, clip_return, gamma, vloss_type='normal', 
+                priority=False, reuse=False, **kwargs):
         """
         buffer (object): buffer to save transitions
         input_dims (dict of ints): dimensions for the observation (o), the goal (g), 
@@ -39,6 +40,7 @@ class DDPG(object):
         clip_return (float): clip returns to be in [-clip_return, clip_return]
         gamma (float): gamma used for Q learning updates
         vloss_type (str): value loss type, 'normal', 'tf_gamma', 'target'
+        priority(boolean): use priority or not
         reuse (boolean): whether or not the networks should be reused
         """
         if self.clip_return is None:
@@ -59,14 +61,14 @@ class DDPG(object):
         input_shapes = dims_to_shapes(self.input_dims)
         stage_shapes = OrderedDict()
         for key in sorted(self.input_dims.keys()):
-            # if key.startswith('info_'):
-            #     continue
             stage_shapes[key] = (None, *input_shapes[key])
         for key in ['o', 'g']:
             stage_shapes[key + '_2'] = stage_shapes[key]
         stage_shapes['r'] = (None,)
         if self.vloss_type == 'tf_gamma':
             stage_shapes['gamma'] = (None,)
+        if self.priority:
+            stage_shapes['w'] = (None,)
         return stage_shapes
     
     def _create_network(self, reuse=False):
@@ -90,6 +92,8 @@ class DDPG(object):
         batch = self.staging_tf.get()
         batch_tf = OrderedDict([(key, batch[i]) for i, key in enumerate(self.stage_shapes.keys())])
         batch_tf['r'] = tf.reshape(batch_tf['r'], [-1, 1])
+        if self.priority:
+            batch_tf['w'] = tf.reshape(batch_tf['w'], [-1,1])
 
         # networks
         with tf.variable_scope('main') as vs:
@@ -117,8 +121,13 @@ class DDPG(object):
             target_tf = tf.clip_by_value(batch_tf['r'], * clip_range)
         else:
             target_tf = tf.clip_by_value(batch_tf['r'] + self.gamma * target_Q_pi_tf, * clip_range)
-            
-        self.Q_loss_tf = tf.reduce_mean(tf.square(tf.stop_gradient(target_tf) - self.main.Q_tf))
+        
+        self.abs_td_error_tf = tf.abs(tf.stop_gradient(target_tf) - self.main.Q_tf)
+        self.Q_loss = tf.square(self.abs_td_error_tf)
+        if self.priority:
+            self.Q_loss_tf = tf.reduce_mean(batch_tf['w'] * self.Q_loss)
+        else:
+            self.Q_loss_tf = tf.reduce_mean(self.Q_loss)
         self.pi_loss_tf = -tf.reduce_mean(self.main.Q_pi_tf)
         self.pi_loss_tf += self.action_l2 * tf.reduce_mean(tf.square(self.main.pi_tf / self.max_u))
 
@@ -224,37 +233,43 @@ class DDPG(object):
         self.pi_adam.sync()
 
     def _grads(self): # Avoid feed_dict here for performance!
-        critic_loss, actor_loss, Q_grad, pi_grad = self.sess.run([  
+        critic_loss, actor_loss, Q_grad, pi_grad, abs_td_error = self.sess.run([  
             self.Q_loss_tf,
             self.main.Q_pi_tf,
             self.Q_grad_tf,
             self.pi_grad_tf,  
+            self.abs_td_error_tf
         ])
-        return critic_loss, actor_loss, Q_grad, pi_grad
+        return critic_loss, actor_loss, Q_grad, pi_grad, abs_td_error
 
     def _update(self, Q_grad, pi_grad):
         self.Q_adam.update(Q_grad, self.Q_lr)
         self.pi_adam.update(pi_grad, self.pi_lr)
-
-    def sample_batch(self):
-        transitions = self.buffer.sample()
-        o, o_2, g = transitions['o'], transitions['o_2'], transitions['g']
-        ag, ag_2 = transitions['ag'], transitions['ag_2']
-        transitions['o'], transitions['g'] = self._preprocess_og(o=o, g=g, ag=ag)
-        transitions['o_2'], transitions['g_2'] = self._preprocess_og(o=o_2, g=g, ag=ag_2)
-        return [transitions[key] for key in self.stage_shapes.keys()]
         
     def stage_batch(self, batch=None):
         if batch is None:
-            batch = self.sample_batch()
+            if self.priority:
+                transitions, idxes = self.buffer.sample()
+            else:
+                transitions = self.buffer.sample()
+            o, o_2, g = transitions['o'], transitions['o_2'], transitions['g']
+            ag, ag_2 = transitions['ag'], transitions['ag_2']
+            transitions['o'], transitions['g'] = self._preprocess_og(o=o, g=g, ag=ag)
+            transitions['o_2'], transitions['g_2'] = self._preprocess_og(o=o_2, g=g, ag=ag_2)
+        
+            batch = [transitions[key] for key in self.stage_shapes.keys()]
         assert len(self.buffer_ph_tf) == len(batch)
         self.sess.run(self.stage_op, feed_dict=dict(zip(self.buffer_ph_tf, batch)))
+        if self.priority:
+            return idxes
 
     def train(self, stage=True):
         if stage:
-            self.stage_batch()
-        critic_loss, actor_loss, Q_grad, pi_grad = self._grads()
+            idxes = self.stage_batch()
+        critic_loss, actor_loss, Q_grad, pi_grad, abs_td_error = self._grads()
         self._update(Q_grad, pi_grad)
+        if self.priority:
+            self.buffer.update_priorities(idxes, abs_td_error)
         return critic_loss, actor_loss
 
     def _init_target_net(self):

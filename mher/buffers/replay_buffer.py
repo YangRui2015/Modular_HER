@@ -41,10 +41,7 @@ class ReplayBuffer:
         if 'o_2' not in buffers and 'ag_2' not in buffers:
             buffers['o_2'] = buffers['o'][:, 1:, :]
             buffers['ag_2'] = buffers['ag'][:, 1:, :]
-
         transitions = self.sampler.sample(buffers)
-        for key in (['r', 'o_2', 'ag_2'] + list(self.buffers.keys())):
-            assert key in transitions, "key %s missing from transitions" % key
         return transitions
 
     def store_episode(self, episode_batch):

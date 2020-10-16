@@ -70,6 +70,11 @@ DEFAULT_PARAMS = {
     # random init episode
     'random_init':100, # for dynamic n-step, this should be bigger
 
+    # prioritized experience replay
+    'alpah': 0.6,
+    'beta': 0.4,
+    'eps': 1e-5,
+
     # n step hindsight experience
     'nstep':3,
     'use_nstep':False,

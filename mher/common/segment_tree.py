@@ -4,9 +4,7 @@ import numpy as np
 class SegmentTree(object):
     def __init__(self, capacity, operation, neutral_element):
         """Build a Segment Tree data structure.
-
         https://en.wikipedia.org/wiki/Segment_tree
-
         Can be used as regular array, but with two
         important differences:
 
@@ -15,7 +13,7 @@ class SegmentTree(object):
             b) user has access to an efficient ( O(log segment size) )
                `reduce` operation which reduces `operation` over
                a contiguous subsequence of items in the array.
-
+        Revised with np.array for better efficiency in setting value.
         Paramters
         ---------
         capacity: int
@@ -70,9 +68,18 @@ class SegmentTree(object):
             end += self._capacity
         end -= 1
         return self._reduce_helper(start, end, 1, 0, self._capacity - 1)
+    
+    def to_array(self, idxs):
+        if type(idxs) == list:
+            return np.array(idxs)
+        elif type(idxs) == np.ndarray:
+            return idxs
+        else:
+            raise TypeError
 
     def set_items(self, idxs, vals):
         '''input np.arrys, faster than original code'''
+        idxs, vals = self.to_array(idxs).copy(), self.to_array(vals).copy()
         idxs += self._capacity
         self._value[idxs] = vals
         idxs //= 2
@@ -86,6 +93,7 @@ class SegmentTree(object):
 
     def get_items(self, idxs):
         assert np.all((idxs >= 0) & (idxs < self._capacity))
+        idxs = self.to_array(idxs).copy()
         idxs += self._capacity
         return self._value[idxs]
 
@@ -105,6 +113,14 @@ class SegmentTree(object):
         assert  0 <= idx < self._capacity
         return self._value[self._capacity + idx]
 
+    def print(self):
+        idx = 1
+        num = 1
+        while num <= self._capacity:
+            print('   ' * ((self._capacity - num) // 2) +  str(self._value[idx:idx+num]))
+            idx += num
+            num *= 2
+
 
 class SumSegmentTree(SegmentTree):
     def __init__(self, capacity):
@@ -116,21 +132,21 @@ class SumSegmentTree(SegmentTree):
 
     def sum(self, start=0, end=None):
         """Returns arr[start] + ... + arr[end]"""
+        if start == 0 and end is None:
+            return self._value[1]
         return super(SumSegmentTree, self).reduce(start, end)
 
-    def sum_numpy(self, start, end=None):
-        return np.sum(self._value[self._capacity:])
-
-    def set_items(self, idxs, vals):
-        '''input np.arrys, faster especially for sumtree'''
-        idxs += self._capacity
-        deltas = vals - self._value[idxs]
-        self._value[idxs] = vals
-        idxs //= 2
-        for idx, delta in zip(idxs, deltas):
-            while idx >= 1:
-                self._value[idx] += delta
-                idx //= 2
+    # def set_items(self, idxs, vals):
+    #     '''input np.arrys, faster especially for sumtree'''
+    #     idxs, vals = self.to_array(idxs).copy(), self.to_array(vals).copy()
+    #     idxs += self._capacity
+    #     deltas = vals - self._value[idxs]
+    #     self._value[idxs] = vals
+    #     idxs //= 2
+    #     for idx, delta in zip(idxs, deltas):
+    #         while idx >= 1:
+    #             self._value[idx] += delta
+    #             idx //= 2
 
     def find_prefixsum_idx(self, prefixsum):
         """Find the highest index `i` in the array such that
@@ -171,6 +187,13 @@ class MinSegmentTree(SegmentTree):
 
     def min(self, start=0, end=None):
         """Returns min(arr[start], ...,  arr[end])"""
-
+        if start == 0 and end is None:
+            return self._value[1]
         return super(MinSegmentTree, self).reduce(start, end)
 
+
+if __name__ == "__main__":
+    tree = SumSegmentTree(8)
+    tree.set_items(np.array([0,4,7,6]), np.array([1,2,3,4]))
+    tree.print()
+    import pdb; pdb.set_trace()

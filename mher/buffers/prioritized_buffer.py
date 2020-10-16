@@ -13,26 +13,11 @@ class PrioritizedReplayBuffer(ReplayBuffer):
     def store_episode(self, episode_batch):
         """episode_batch: array(batch_size x (T or T+1) x dim_key)"""
         episode_idxs = super().store_episode(episode_batch)
-        # save for max priority
-        with self.lock:
-            self.sampler.update_new_priorities(episode_idxs)
+        # save priority
+        if not hasattr(episode_idxs, '__len__'):
+            episode_idxs = np.array([episode_idxs]) 
+        self.sampler.update_new_priorities(episode_idxs)
 
-    def update_priority(self, idxs, priorities):
-        self.sampler.update_priority(idxs, priorities)
-
-    def sample(self):
-        """Returns a dict {key: array(batch_size x shapes[key])}"""
-        buffers = {}
-        with self.lock:
-            assert self.current_size > 0
-            for key in self.buffers.keys():
-                buffers[key] = self.buffers[key][:self.current_size] 
-
-        buffers['o_2'] = buffers['o'][:, 1:, :]
-        buffers['ag_2'] = buffers['ag'][:, 1:, :]
-
-        transitions, weights, idxs = self.sampler.sample(buffers)
-        for key in (['r', 'o_2', 'ag_2'] + list(self.buffers.keys())):
-            assert key in transitions, "key %s missing from transitions" % key
-        return (transitions, weights, idxs)
+    def update_priorities(self, idxs, priorities):
+        self.sampler.update_priorities(idxs, priorities)
 

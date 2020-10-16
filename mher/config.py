@@ -13,6 +13,7 @@ from mher.envs.env_utils import (cached_make_env, get_rewardfun,
                                  simple_goal_subtract)
 from mher.envs.wrappers.wrapper_utils import recurse_attribute
 from mher.samplers import *
+from mher.buffers import *
 
 
 def log_params(params):
@@ -65,6 +66,10 @@ def configure_ddpg(dims, params, buffer):
     #     vloss_type = 'target'
     else:
         vloss_type = 'normal'
+    if 'priority' in params['sampler']:
+        priority = True
+    else:
+        priority = False
     ddpg_params.update({'input_dims': dims.copy(),  
                         'buffer':buffer,
                         'clip_pos_returns': ddpg_params['clip_pos_returns'], 
@@ -72,7 +77,8 @@ def configure_ddpg(dims, params, buffer):
                                         if ddpg_params['clip_return'] else np.inf, 
                         'subtract_goals': simple_goal_subtract,
                         'gamma': params['gamma'],
-                        'vloss_type': vloss_type
+                        'vloss_type': vloss_type,
+                        'priority': priority
                         })
     policy = DDPG(**ddpg_params) 
     return policy
@@ -114,19 +120,34 @@ def configure_buffer(dims, params, sampler):
     buffer_shapes['g'] = (buffer_shapes['g'][0], dims['g'])
     buffer_shapes['ag'] = (params['T'] + 1, dims['g'])
     buffer_size = (params['buffer_size'] // params['rollout_batch_size']) * params['rollout_batch_size'] # buffer_size % rollout_batch_size should be zero
-    return ReplayBuffer(buffer_shapes, buffer_size, params['T'], sampler)
+    if 'priority' in params['sampler']:
+        Buffer = PrioritizedReplayBuffer
+    else:
+        Buffer = ReplayBuffer
+    return Buffer(buffer_shapes, buffer_size, params['T'], sampler)
 
 def configure_sampler(dims, params):
     if params['sampler'] == 'random':
          sampler = RandomSampler(params['T'], params['reward_fun'], params['batch_size'])
-    elif params['sampler'].startswith('her'): #valid: her_future, her_random, her_final
+    elif params['sampler'].startswith('her'): # valid: her_future, her_random, her_final
         strategy = params['sampler'].replace('her_', '')
-        sampler = HER_Sampler(params['T'], params['reward_fun'], params['batch_size'], params['relabel_p'], strategy)
+        sampler = HER_Sampler(params['T'], params['reward_fun'], params['batch_size'], 
+                            params['relabel_p'], strategy)
     elif params['sampler'] == 'nstep':
-        sampler = Nstep_Sampler(params['T'], params['reward_fun'], params['batch_size'], params['relabel_p'], params['nstep'], params['gamma'])
+        sampler = Nstep_Sampler(params['T'], params['reward_fun'], params['batch_size'], 
+                                params['relabel_p'], params['nstep'], params['gamma'])
     elif params['sampler'].startswith('nstep_her'):
         strategy = params['sampler'].replace('nstep_her_', '')
-        sampler = Nstep_HER_Sampler(params['T'], params['reward_fun'], params['batch_size'], params['relabel_p'], params['nstep'], params['gamma'], strategy)
+        sampler = Nstep_HER_Sampler(params['T'], params['reward_fun'], params['batch_size'], 
+                                    params['relabel_p'], params['nstep'], params['gamma'], strategy)
+    elif params['sampler'] == 'priority':
+        sampler = PrioritizedSampler(params['T'], params['reward_fun'], params['batch_size'],
+                                params['buffer_size'], params['alpah'], params['beta'], params['eps'])
+    elif params['sampler'].startswith('priority_her'):
+        strategy = params['sampler'].replace('priority_her_', '')
+        sampler = PrioritizedHERSampler(params['T'], params['reward_fun'], params['batch_size'],
+                                params['buffer_size'], params['alpah'], params['beta'], params['eps'],
+                                params['relabel_p'], strategy)
     else:
         raise NotImplementedError
     return sampler
