@@ -62,3 +62,4 @@ We use a group of test parameters in DEFAULT_ENV_PARAMS for performance comparis
 * 10.4 V0.6: update code framework, add rollouts and samplers packages;
 * 10.6 add nstep sampler and nstep her sampler;
 * 10.7 fix bug of nstep her sampler;
+* 10.16 add priority experience replay and cut her;
