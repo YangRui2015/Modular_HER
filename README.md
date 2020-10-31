@@ -1,6 +1,8 @@
 # Modular-HER 
 Modular-HER is revised from OpenAI baselines and supports many improvements for Hindsight Experience Replay (HER) as modules. We aim to provide a more **modular**, **readable** and **consice** package for Multi-goal Reinforcement Learning.
 
+Welcome everyone to contribute suggestions and code !
+
 
 ## Functions
 - [x] DDPG (https://arxiv.org/abs/1509.02971);
