@@ -134,7 +134,7 @@ def configure_buffer(dims, params, sampler):
 def configure_sampler(dims, params):
     if params['sampler'] == 'random':
          sampler = RandomSampler(params['T'], params['reward_fun'], params['batch_size'])
-    elif params['sampler'].startswith('her'): # valid: her_future, her_random, her_final
+    elif params['sampler'].startswith('her'): # valid: her_future, her_random, her_final, her_episode
         strategy = params['sampler'].replace('her_', '')
         sampler = HER_Sampler(params['T'], params['reward_fun'], params['batch_size'], 
                             params['relabel_p'], strategy)

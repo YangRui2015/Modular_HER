@@ -44,9 +44,9 @@ setup(name='mher',
       extras_require=extras,
       description='Modular HER: based on OpenAI baselines',
       author='RuiYang',
-      url='https://github.com/openai/baselines',
+      url='https://github.com/YangRui2015/Modular_HER',
       author_email='yangrui19@mails.tsinghua.edu.cn',
-      version='0.0.1')
+      version='1.0')
 
 
 # ensure there is some tensorflow build with version above 1.4
