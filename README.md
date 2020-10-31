@@ -37,10 +37,29 @@ pip install -e .
 
 
 ## Usage
-Training and saving models,saving logs.
+Trainging DDPG and save logs and models.
+```bash
+python -m mher.run --env=FetchReach-v1 --num_epoch 30 --num_env 1 --sampler random --play_episodes 5 --log_path=~/logs/fetchreach/ --save_path=~/logs/models/fetchreach_ddpg/
+```
+
+Trainging HER + DDPG with different sampler ('her_future', 'her_random', 'her_last', 'her_episode' are supported).
 ```bash
 python -m mher.run --env=FetchReach-v1 --num_epoch 30 --num_env 1 --sampler her_future --play_episodes 5 --log_path=~/logs/fetchreach/ --save_path=~/logs/models/fetchreach_herfuture/
 ```
+
+Training SAC + HER.
+```bash
+python -m mher.run  --env=FetchReach-v1 --num_epoch 50  --algo sac --sac_alpha 0.05 --sampler her_episode 
+```
+
+All support sampler flags.
+| Group | Samplers | 
+| ------ | ------ | 
+| Random sampler | random | 
+| HER | her_future, her_episode, her_last, her_random |
+| Nstep| nstep, nstep_her_future, nstep_her_epsisode, nstep_her_last, nstep_her_random|
+| Priority| priority, priority_her_future, priority_her_episode, priority_her_random, priority_her_last|
+
 
 ## Results
 
@@ -67,4 +86,4 @@ We use a group of test parameters in DEFAULT_ENV_PARAMS for performance comparis
 * 10.6 add nstep sampler and nstep her sampler;
 * 10.7 fix bug of nstep her sampler;
 * 10.16 add priority experience replay and cut her;
-* 10.31 add SHER support;
+* 10.31 V1.0: add SHER support;
