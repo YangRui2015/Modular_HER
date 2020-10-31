@@ -6,12 +6,12 @@ DEFAULT_ENV_PARAMS = {
         'batch_size':64,
         'rollout_batch_size':1
     },
-    # 'SawyerReachXYZEnv-v1':{
-    #     'n_cycles':5,
-    #     'n_batches':2,
-    #     'n_test_rollouts':50,
-    #     'batch_size':64
-    # },
+    'SawyerReachXYZEnv-v1':{
+        'n_cycles':5,
+        'n_batches':2,
+        'n_test_rollouts':50,
+        'batch_size':64
+    },
     'FetchReach-v1': {
         'n_cycles': 10,  
         'n_test_rollouts': 20,
@@ -28,6 +28,8 @@ DEFAULT_ENV_PARAMS = {
 
 
 DEFAULT_PARAMS = {  
+    # algorithm
+    'algo':'ddpg',
     # env
     'max_u': 1.,  # max absolute value of actions on different coordinates
     # ddpg
@@ -38,10 +40,13 @@ DEFAULT_PARAMS = {
     'polyak': 0.95,  # polyak averaging coefficient
     'action_l2': 1.0,  # quadratic penalty on actions (before rescaling by max_u)
     'clip_obs': 200.,
-    'scope': 'ddpg',  # can be tweaked for testing
     'relative_goals': False,
     'clip_pos_returns': True,
     'clip_return': True,
+
+    # sac
+    'sac_alpha':0.03,
+
     # buffer
     'buffer_size': int(1E6),  # for experience replay
     'sampler': 'random',
@@ -84,7 +89,7 @@ DEFAULT_PARAMS = {
     'lamb':0.7,
 
     # dynamic n-step
-    'use_dynamic_nstep':True, # if true then use_n_step=False
+    'use_dynamic_nstep':False, 
     'alpha':0.5,
     'dynamic_batchsize':512,  # warm up the dynamic model
     'dynamic_init':500,

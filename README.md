@@ -5,13 +5,12 @@ Modular-HER is revised from OpenAI baselines and supports many improvements for 
 ## Functions
 - [x] DDPG (https://arxiv.org/abs/1509.02971);
 - [x] HER (future, episode, final, random) (https://arxiv.org/abs/1707.01495);
-- [x] Cut HER;
-- [ ] SHER (https://arxiv.org/abs/2002.02089);
+- [x] Cut HER (incrementally increase the future sample length);
+- [x] SHER (https://arxiv.org/abs/2002.02089);
 - [x] Prioritized HER (same as PHER in https://arxiv.org/abs/1905.08786);
 - [ ] Energe-based Prioritized HER(https://www.researchgate.net/publication/341776498_Energy-Based_Hindsight_Experience_Prioritization);
 - [ ] Curriculum-guided Hindsight Experience Replay (http://papers.nips.cc/paper/9425-curriculum-guided-hindsight-experience-replay);
 - [x] nstep DDPG and nstep HER;
-- [ ] Our methods: Multi-step HER (![](https://latex.codecogs.com/svg.latex?\lambda)) and Model-based Multi-step HER;
 - [ ] more to be continued...
 
 
@@ -51,9 +50,14 @@ We use a group of test parameters in DEFAULT_ENV_PARAMS for performance comparis
 
 <div  align="center"> <img src="./data/mher_all.png" width=500;  /></div>    
 
-1. Performance of Nstep HER and Nstep DDPG.
+2. Performance of Nstep HER and Nstep DDPG.
 
 <div  align="center"><img src="./data/mher_all_step.png" width=500;" /></div>
+
+3. Performance of SHER (Not good enough in FetchReach environment, I will test more envs to report). 
+
+<div  align="center"><img src="./data/mher_sac.png" width=500;" /></div>
+
 
 ## Update
 
@@ -63,3 +67,4 @@ We use a group of test parameters in DEFAULT_ENV_PARAMS for performance comparis
 * 10.6 add nstep sampler and nstep her sampler;
 * 10.7 fix bug of nstep her sampler;
 * 10.16 add priority experience replay and cut her;
+* 10.31 add SHER support;

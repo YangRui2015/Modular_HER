@@ -49,7 +49,7 @@ def main(args):
     # define objects
     sampler = config.configure_sampler(dims, params)
     buffer = config.configure_buffer(dims, params, sampler)
-    policy = config.configure_ddpg(dims=dims, params=params, buffer=buffer)
+    policy = config.configure_algorithm(dims=dims, params=params, buffer=buffer)
     rollout_params, eval_params = config.configure_rollout(params)
 
     if args.load_path is not None:

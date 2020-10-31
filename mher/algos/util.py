@@ -160,3 +160,4 @@ def get_var(scope, key='trainable'):
         raise NotImplementedError
     res = tf.get_collection(tf_key, scope=scope)
     return res
+

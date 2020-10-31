@@ -3,7 +3,7 @@ import os
 import gym
 import numpy as np
 
-from mher.algos.ddpg import DDPG
+from mher.algos import DDPG, SAC
 from mher.algos.util import dims_to_shapes
 from mher.buffers.replay_buffer import ReplayBuffer
 from mher.common import logger
@@ -27,13 +27,13 @@ def process_params(env, tmp_env, rank, args, extra_args):
     params['env_name'] = env_name
     if env_name in DEFAULT_ENV_PARAMS:
         params.update(DEFAULT_ENV_PARAMS[env_name])  # merge env-specific parameters in config
-
-    params = prepare_params(tmp_env, params)
+    
     params['rollout_batch_size'] = env.num_envs
     params['random_init'] = args.random_init
     params['play_episodes'] = args.play_episodes
     params.update(extra_args)
-
+    params = prepare_params(tmp_env, params)
+    
     if rank == 0:
         log_params(params)
     return params
@@ -42,24 +42,25 @@ def process_params(env, tmp_env, rank, args, extra_args):
 def prepare_params(tmp_env, params):
     # default max episode steps
     params['reward_fun'] = get_rewardfun(params, tmp_env)
-    # DDPG params
-    ddpg_params = dict()
+    # algo params
+    algo_params = dict()
     max_episode_steps = recurse_attribute(tmp_env, '_max_episode_steps')
     assert max_episode_steps is not None, 'Env object should have _max_episode_steps attribute!'
     params['T'] = max_episode_steps
     params['max_u'] = np.array(params['max_u']) if isinstance(params['max_u'], list) else params['max_u']
     params['gamma'] = 1. - 1. / params['T']
     for name in ['hidden', 'layers', 'polyak', 'Q_lr', 'pi_lr', 'norm_eps', 'norm_clip', 'max_u',
-                 'action_l2', 'clip_obs', 'scope', 'relative_goals', 'clip_pos_returns', 'clip_return']:
-        ddpg_params[name] = params[name]
+                 'action_l2', 'clip_obs', 'relative_goals', 'clip_pos_returns', 'clip_return']:
+        algo_params[name] = params[name]
         # params['_' + name] = params[name]
         del params[name]
+    algo_params['scope'] = params['algo']
     
-    params['ddpg_params'] = ddpg_params
+    params['algo_params'] = algo_params
     return params
 
-def configure_ddpg(dims, params, buffer):
-    ddpg_params = params['ddpg_params']
+def configure_algorithm(dims, params, buffer):
+    algo_params = params['algo_params']
     if 'nstep' in params['sampler']:
         vloss_type = 'tf_gamma'
     # elif 'nstep' in params['sampler'] and 'her' in params['sampler']:
@@ -70,17 +71,21 @@ def configure_ddpg(dims, params, buffer):
         priority = True
     else:
         priority = False
-    ddpg_params.update({'input_dims': dims.copy(),  
+    algo_params.update({'input_dims': dims.copy(),  
                         'buffer':buffer,
-                        'clip_pos_returns': ddpg_params['clip_pos_returns'], 
+                        'clip_pos_returns': algo_params['clip_pos_returns'], 
                         'clip_return': (1. / (1. - params['gamma'])) 
-                                        if ddpg_params['clip_return'] else np.inf, 
+                                        if algo_params['clip_return'] else np.inf, 
                         'subtract_goals': simple_goal_subtract,
                         'gamma': params['gamma'],
                         'vloss_type': vloss_type,
                         'priority': priority
                         })
-    policy = DDPG(**ddpg_params) 
+    if params['algo'] == 'sac':
+        algo_params['sac_alpha'] = params['sac_alpha']
+        policy = SAC(**algo_params)
+    else:
+        policy = DDPG(**algo_params) 
     return policy
 
 def configure_dims(env, params):
