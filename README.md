@@ -1,4 +1,6 @@
 # Modular-HER 
+![GitHub](https://img.shields.io/github/license/YangRui2015/Modular_HER) ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/YangRui2015/Modular_HER) ![GitHub last commit](https://img.shields.io/github/last-commit/YangRui2015/Modular_HER)
+
 Modular-HER is revised from OpenAI baselines and supports many improvements for Hindsight Experience Replay (HER) as modules. We aim to provide a more **modular**, **readable** and **concise** package for Multi-goal Reinforcement Learning.
 
 Welcome everyone to contribute suggestions or code !
